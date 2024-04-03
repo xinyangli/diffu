@@ -1,0 +1,4 @@
+#ifndef _DIFFTEST_DIFFTEST_H_
+#define _DIFFTEST_DIFFTEST_H_
+
+#endif
