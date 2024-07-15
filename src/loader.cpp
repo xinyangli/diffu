@@ -18,7 +18,7 @@ Target::Target(const std::string &name, const std::string &func_prefix,
 
 #define LOAD_SYMBOL(ops, handle, prefix, name)                                 \
   do {                                                                         \
-    ops.name = reinterpret_cast<decltype(TargetOps::name)>(                    \
+    ops.name = reinterpret_cast<decltype(DiffTargetApi::name)>(                \
         dlsym(handle, (prefix + #name).c_str()));                              \
     if (!ops.name)                                                             \
       goto load_error;                                                         \

@@ -8,7 +8,7 @@
 #include <vector>
 
 // Target dynamic library has to implement these functions
-struct TargetOps {
+struct DiffTargetApi {
   typedef void (*cont_t)(void *args, gdb_action_t *res);
   cont_t cont;
 
@@ -48,7 +48,7 @@ struct TargetMeta {
 
 class Target {
 public:
-  TargetOps ops;
+  DiffTargetApi ops;
   TargetMeta meta;
   arch_info_t arch;
   size_t argsize;
