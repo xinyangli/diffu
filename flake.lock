@@ -105,6 +105,26 @@
         "type": "github"
       }
     },
+    "nur-xin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1714033851,
+        "narHash": "sha256-Mi7m3p9vmtNOdyD1hLse/tzxDuV3bwP0gKrmOBPiQ4c=",
+        "ref": "refs/heads/master",
+        "rev": "809554f41ac44acc4b1ec21473746c2af9993f2f",
+        "revCount": 149,
+        "type": "git",
+        "url": "https://git.xinyang.life/xin/nur.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.xinyang.life/xin/nur.git"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -133,6 +153,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
+        "nur-xin": "nur-xin",
         "pre-commit-hooks": "pre-commit-hooks"
       }
     },

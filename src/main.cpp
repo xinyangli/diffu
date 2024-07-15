@@ -1,5 +1,23 @@
-#include <difftest.hpp>
+#include "api.hpp"
+#include "config.hpp"
+#include "difftest.hpp"
 
-using reg_t = uint32_t;
+int main(int argc, char **argv) {
+  Config config;
+  int ret = 0;
+  ret = config.cli_parse(argc, argv);
+  if (ret)
+    return ret;
 
-int main() { return 0; }
+  std::vector<Target> refs;
+  Target dut = Target{"dut", "nemu_", config.dut};
+  for (const auto &ref_libpath : config.refs) {
+    refs.emplace_back(ref_libpath.string(), "nemu_", ref_libpath);
+  }
+
+  Difftest difftest{std::move(dut), std::move(refs)};
+  difftest.setup(config.memory_file);
+  difftest.cont();
+
+  return 0;
+}
