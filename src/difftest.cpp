@@ -72,8 +72,6 @@ gdb_action_t Difftest::stepi() {
 gdb_action_t Difftest::cont() {
   bool breakflag = false;
   Target *pbreak;
-  check_all();
-  std::cerr << "setup finished." << std::endl;
   while (true) {
     // for(auto &target : *this) {
     for (auto it = this->begin(); it != this->end(); ++it) {
@@ -95,4 +93,43 @@ gdb_action_t Difftest::cont() {
     }
   }
   return {gdb_action_t::ACT_NONE, 0};
+}
+
+int Difftest::read_reg(int regno, size_t *value) {
+  std::cout << "read_reg(" << regno << ", " << value << ")" << std::endl;
+  return current_target->ops.read_reg(current_target->args.data(), regno,
+                                      value);
+}
+
+int Difftest::write_reg(int regno, size_t value) {
+  return current_target->ops.write_reg(current_target->args.data(), regno,
+                                       value);
+}
+
+int Difftest::read_mem(size_t addr, size_t len, void *val) {
+  return current_target->ops.read_mem(current_target->args.data(), addr, len,
+                                      val);
+}
+
+int Difftest::write_mem(size_t addr, size_t len, void *val) {
+  return current_target->ops.write_mem(current_target->args.data(), addr, len,
+                                       val);
+}
+
+bool Difftest::set_bp(size_t addr, bp_type_t type) {
+  bool ret = true;
+  for (auto it = this->begin(); it != this->end(); ++it) {
+    auto &target = *it;
+    ret = ret && target.ops.set_bp(target.args.data(), addr, type);
+  }
+  return ret;
+}
+
+bool Difftest::del_bp(size_t addr, bp_type_t type) {
+  bool ret = true;
+  for (auto it = this->begin(); it != this->end(); ++it) {
+    auto &target = *it;
+    ret = ret && target.ops.del_bp(target.args.data(), addr, type);
+  }
+  return ret;
 }

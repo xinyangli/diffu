@@ -3,9 +3,12 @@
 
 #include <cstddef>
 #include <filesystem>
-#include <gdbstub.h>
 #include <string>
 #include <vector>
+
+extern "C" {
+#include <gdbstub.h>
+}
 
 // Target dynamic library has to implement these functions
 struct DiffTargetApi {

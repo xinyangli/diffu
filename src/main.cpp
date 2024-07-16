@@ -2,6 +2,9 @@
 #include "config.hpp"
 #include "difftest.hpp"
 
+// extern "C" {
+int gdbstub_loop(Difftest *);
+// }
 int main(int argc, char **argv) {
   Config config;
   int ret = 0;
@@ -16,8 +19,8 @@ int main(int argc, char **argv) {
   }
 
   Difftest difftest{std::move(dut), std::move(refs)};
-  difftest.setup(config.memory_file);
-  difftest.cont();
+
+  gdbstub_loop(&difftest);
 
   return 0;
 }

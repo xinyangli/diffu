@@ -2,9 +2,11 @@
 #define _DIFFTEST_DIFFTEST_H_
 #include "api.hpp"
 #include <filesystem>
-#include <gdbstub.h>
 #include <stdexcept>
 #include <vector>
+extern "C" {
+#include <gdbstub.h>
+}
 
 #include <iostream>
 class Difftest {
@@ -12,12 +14,30 @@ private:
   Target dut;
   std::vector<Target> refs;
 
+  // target used for read_reg, write_reg, read_mem, write_mem
+  Target *current_target = &dut;
+
 public:
   Difftest(Target &&dut, std::vector<Target> &&refs);
 
   void setup(const std::filesystem::path &memory_file);
-  gdb_action_t stepi();
+
+  // Export API for gdbstub
   gdb_action_t cont();
+  gdb_action_t stepi();
+  int read_reg(int regno, size_t *value);
+  int write_reg(int regno, size_t value);
+  int read_mem(size_t addr, size_t len, void *val);
+  int write_mem(size_t addr, size_t len, void *val);
+  bool set_bp(size_t addr, bp_type_t type);
+  bool del_bp(size_t addr, bp_type_t type);
+
+  arch_info_t get_arch() const {
+    std::cout << dut.arch.reg_num << std::endl;
+    return dut.arch;
+  }
+
+  // Other APi
   static bool check(Target &dut, Target &ref) {
     for (int r = 0; r < dut.arch.reg_num; r++) {
       size_t regdut = 0, regref = 0;

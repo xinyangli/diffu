@@ -50,6 +50,7 @@ Target::Target(const std::string &name, const std::string &func_prefix,
       reinterpret_cast<arch_info_t *>(dlsym(meta.dlhandle, "isa_arch_info"));
   if (!arch_sym)
     goto load_error;
+  arch = *arch_sym;
   return;
 
 load_error:
