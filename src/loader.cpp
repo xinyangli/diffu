@@ -1,6 +1,7 @@
 #include "api.hpp"
 #include <cstdint>
 #include <dlfcn.h>
+#include <gdbstub.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -70,7 +71,8 @@ bool Target::is_on_breakpoint(const gdb_action_t &res) const {
   if (res.reason == gdb_action_t::ACT_BREAKPOINT ||
       res.reason == gdb_action_t::ACT_RWATCH ||
       res.reason == gdb_action_t::ACT_WATCH ||
-      res.reason == gdb_action_t::ACT_WWATCH) {
+      res.reason == gdb_action_t::ACT_WWATCH ||
+      res.reason == gdb_action_t::ACT_SHUTDOWN) {
     return true;
   }
   return false;

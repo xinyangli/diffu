@@ -17,6 +17,8 @@ private:
   // target used for read_reg, write_reg, read_mem, write_mem
   Target *current_target = &dut;
 
+  bool exec(size_t n, gdb_action_t *ret);
+
 public:
   Difftest(Target &&dut, std::vector<Target> &&refs);
 
@@ -32,12 +34,13 @@ public:
   bool set_bp(size_t addr, bp_type_t type);
   bool del_bp(size_t addr, bp_type_t type);
 
+  bool check_all();
+
   arch_info_t get_arch() const {
     std::cout << dut.arch.reg_num << std::endl;
     return dut.arch;
   }
 
-  // Other APi
   static bool check(Target &dut, Target &ref) {
     for (int r = 0; r < dut.arch.reg_num; r++) {
       size_t regdut = 0, regref = 0;
@@ -51,7 +54,6 @@ public:
     }
     return true;
   };
-  bool check_all();
 
   class Iterator {
   private:

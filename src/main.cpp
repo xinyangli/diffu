@@ -13,12 +13,12 @@ int main(int argc, char **argv) {
     return ret;
 
   std::vector<Target> refs;
-  Target dut = Target{"dut", "nemu_", config.dut};
+  Target *dut = new Target{"dut", "nemu_", config.dut};
   for (const auto &ref_libpath : config.refs) {
     refs.emplace_back(ref_libpath.string(), "nemu_", ref_libpath);
   }
 
-  Difftest difftest{std::move(dut), std::move(refs)};
+  Difftest difftest{std::move(*dut), std::move(refs)};
 
   difftest.setup(config.memory_file);
 

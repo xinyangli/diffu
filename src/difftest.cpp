@@ -1,6 +1,7 @@
 #include "api.hpp"
 #include <difftest.hpp>
 #include <fstream>
+#include <gdbstub.h>
 #include <stdexcept>
 
 #include <cstdio>
@@ -49,9 +50,9 @@ bool Difftest::check_all() {
   return true;
 }
 
-gdb_action_t Difftest::stepi() {
+bool Difftest::exec(size_t n, gdb_action_t *ret) {
   bool breakflag = false;
-  Target *pbreak;
+  Target *pbreak = &(*(this->begin()));
   for (auto it = this->begin(); it != this->end(); ++it) {
     auto &target = *it;
     target.ops.stepi(target.args.data(), &target.last_res);
@@ -62,37 +63,26 @@ gdb_action_t Difftest::stepi() {
   }
 
   if (breakflag) {
-    gdb_action_t ret = {.reason = gdb_action_t::ACT_BREAKPOINT};
-    pbreak->ops.read_reg(pbreak->args.data(), 32, &ret.data);
-    return ret;
+    ret->reason = pbreak->last_res.reason;
+    ret->data = pbreak->last_res.data;
+    return false;
   }
-  return {gdb_action_t::ACT_NONE, 0};
+  return true;
+}
+
+gdb_action_t Difftest::stepi() {
+  gdb_action_t ret = {.reason = gdb_action_t::ACT_NONE};
+  exec(1, &ret);
+  check_all();
+  return ret;
 }
 
 gdb_action_t Difftest::cont() {
-  bool breakflag = false;
-  Target *pbreak;
-  while (true) {
-    // for(auto &target : *this) {
-    for (auto it = this->begin(); it != this->end(); ++it) {
-      auto &target = *it;
-      target.ops.stepi(target.args.data(), &target.last_res);
-
-      if (target.is_on_breakpoint()) {
-        breakflag = true;
-        pbreak = &target;
-      }
-    }
-
+  gdb_action_t ret = {.reason = gdb_action_t::ACT_NONE};
+  while (exec(1, &ret)) {
     check_all();
-
-    if (breakflag) {
-      gdb_action_t ret = {.reason = gdb_action_t::ACT_BREAKPOINT};
-      pbreak->ops.read_reg(pbreak->args.data(), 32, &ret.data);
-      return ret;
-    }
-  }
-  return {gdb_action_t::ACT_NONE, 0};
+  };
+  return ret;
 }
 
 int Difftest::read_reg(int regno, size_t *value) {
