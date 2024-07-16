@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
 
   Difftest difftest{std::move(dut), std::move(refs)};
 
+  difftest.setup(config.memory_file);
+
   gdbstub_loop(&difftest);
 
   return 0;
