@@ -13,9 +13,14 @@ int main(int argc, char **argv) {
     return ret;
 
   std::vector<Target> refs;
-  Target *dut = new Target{"dut", "nemu_", config.dut};
-  for (const auto &ref_libpath : config.refs) {
-    refs.emplace_back(ref_libpath.string(), "nemu_", ref_libpath);
+  Target *dut = new Target{"dut", config.dut_prefix, config.dut};
+  auto ref_libpath = config.refs.begin();
+  auto ref_prefix = config.refs_prefix.begin();
+  while (ref_libpath != config.refs.end() &&
+         ref_prefix != config.refs_prefix.end()) {
+    refs.emplace_back(ref_libpath->string(), *ref_prefix, *ref_libpath);
+    ref_libpath++;
+    ref_prefix++;
   }
 
   Difftest difftest{std::move(*dut), std::move(refs)};

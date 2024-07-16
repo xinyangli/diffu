@@ -35,7 +35,6 @@ void Difftest::setup(const std::filesystem::path &memory_file) {
   // for(auto target : *this) {
   for (auto it = this->begin(); it != this->end(); ++it) {
     auto &target = *it;
-    printf("init addr: %p\n", target.ops.init);
     target.ops.init(target.args.data());
     target.ops.write_mem(target.args.data(), 0x80000000UL, membuf.size(),
                          membuf.data());
@@ -51,21 +50,23 @@ bool Difftest::check_all() {
 }
 
 bool Difftest::exec(size_t n, gdb_action_t *ret) {
-  bool breakflag = false;
-  Target *pbreak = &(*(this->begin()));
-  for (auto it = this->begin(); it != this->end(); ++it) {
-    auto &target = *it;
-    target.ops.stepi(target.args.data(), &target.last_res);
-    if (target.is_on_breakpoint()) {
-      breakflag = true;
-      pbreak = &target;
+  while (n--) {
+    bool breakflag = false;
+    Target *pbreak = &(*(this->begin()));
+    for (auto it = this->begin(); it != this->end(); ++it) {
+      auto &target = *it;
+      target.ops.stepi(target.args.data(), &target.last_res);
+      if (target.is_on_breakpoint()) {
+        breakflag = true;
+        pbreak = &target;
+      }
     }
-  }
 
-  if (breakflag) {
-    ret->reason = pbreak->last_res.reason;
-    ret->data = pbreak->last_res.data;
-    return false;
+    if (breakflag) {
+      ret->reason = pbreak->last_res.reason;
+      ret->data = pbreak->last_res.data;
+      return false;
+    }
   }
   return true;
 }
@@ -86,7 +87,6 @@ gdb_action_t Difftest::cont() {
 }
 
 int Difftest::read_reg(int regno, size_t *value) {
-  std::cout << "read_reg(" << regno << ", " << value << ")" << std::endl;
   return current_target->ops.read_reg(current_target->args.data(), regno,
                                       value);
 }
@@ -110,7 +110,7 @@ bool Difftest::set_bp(size_t addr, bp_type_t type) {
   bool ret = true;
   for (auto it = this->begin(); it != this->end(); ++it) {
     auto &target = *it;
-    ret = ret && target.ops.set_bp(target.args.data(), addr, type);
+    ret = target.ops.set_bp(target.args.data(), addr, type) && ret;
   }
   return ret;
 }
@@ -119,7 +119,7 @@ bool Difftest::del_bp(size_t addr, bp_type_t type) {
   bool ret = true;
   for (auto it = this->begin(); it != this->end(); ++it) {
     auto &target = *it;
-    ret = ret && target.ops.del_bp(target.args.data(), addr, type);
+    ret = target.ops.del_bp(target.args.data(), addr, type) && ret;
   }
   return ret;
 }

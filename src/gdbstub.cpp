@@ -57,8 +57,8 @@ int gdbstub_loop(Difftest *diff) {
   char socket_addr[] = "127.0.0.1:1234";
   gdbstub_init(&gdbstub_priv, &gdbstub_ops, diff->get_arch(), socket_addr);
 
+  std::cout << "Waiting for gdb connection at " << socket_addr << std::endl;
   bool success = gdbstub_run(&gdbstub_priv, diff);
-  std::cout << "Waiting for gdb connection at " << socket_addr;
   gdbstub_close(&gdbstub_priv);
   return !success;
 }

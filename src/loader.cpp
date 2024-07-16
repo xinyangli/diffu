@@ -2,13 +2,11 @@
 #include <cstdint>
 #include <dlfcn.h>
 #include <gdbstub.h>
-#include <iostream>
 #include <stdexcept>
 
 Target::Target(const std::string &name, const std::string &func_prefix,
                const std::filesystem::path &path) {
 
-  std::cout << path.c_str() << std::endl;
   meta = {.name = name,
           .libpath = path,
           .dlhandle = dlopen(path.c_str(), RTLD_LAZY)};
@@ -60,10 +58,7 @@ load_error:
   throw std::runtime_error(err);
 }
 
-Target::~Target() {
-  std::cout << "Destruct target " << meta.name << std::endl;
-  dlclose(meta.dlhandle);
-}
+Target::~Target() { dlclose(meta.dlhandle); }
 
 bool Target::is_on_breakpoint() const { return is_on_breakpoint(last_res); }
 
