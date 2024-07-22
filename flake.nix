@@ -49,6 +49,7 @@
             mini-gdbstub
           ];
         };
+        packages.default = pkgs.callPackage ./default.nix { };
       }
     );
 }
