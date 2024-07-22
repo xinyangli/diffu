@@ -16,8 +16,19 @@ private:
 
   // target used for read_reg, write_reg, read_mem, write_mem
   Target *current_target = &dut;
+  bool halt_status = false;
+  inline void start_run() {
+    __atomic_store_n(&halt_status, false, __ATOMIC_RELAXED);
+  };
+  inline bool is_halt() {
+    return __atomic_load_n(&halt_status, __ATOMIC_RELAXED);
+  };
 
-  bool exec(size_t n, gdb_action_t *ret);
+  struct ExecRet {
+    bool at_breakpoint;
+    bool do_difftest;
+  };
+  ExecRet exec(size_t n, gdb_action_t *ret);
 
 public:
   Difftest(Target &&dut, std::vector<Target> &&refs);
@@ -35,14 +46,16 @@ public:
   bool del_bp(size_t addr, bp_type_t type);
 
   bool check_all();
+  int sync_regs_to_ref(void);
 
-  arch_info_t get_arch() const {
-    std::cout << dut.arch.reg_num << std::endl;
-    return dut.arch;
-  }
+  inline void halt() {
+    __atomic_store_n(&halt_status, true, __ATOMIC_RELAXED);
+  };
+
+  arch_info_t get_arch() const { return *dut.isa_arch_info; }
 
   static bool check(Target &dut, Target &ref) {
-    for (int r = 0; r < dut.arch.reg_num; r++) {
+    for (int r = 0; r < dut.isa_arch_info->reg_num; r++) {
       size_t regdut = 0, regref = 0;
       dut.ops.read_reg(dut.args.data(), r, &regdut);
       ref.ops.read_reg(ref.args.data(), r, &regref);

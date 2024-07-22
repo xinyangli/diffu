@@ -2,9 +2,8 @@
 #include "config.hpp"
 #include "difftest.hpp"
 
-// extern "C" {
-int gdbstub_loop(Difftest *);
-// }
+int gdbstub_loop(Difftest *, std::string);
+
 int main(int argc, char **argv) {
   Config config;
   int ret = 0;
@@ -27,7 +26,11 @@ int main(int argc, char **argv) {
 
   difftest.setup(config.memory_file);
 
-  gdbstub_loop(&difftest);
+  if (config.use_debugger) {
+    gdbstub_loop(&difftest, config.gdbstub_addr);
+  } else {
+    difftest.cont();
+  }
 
   return 0;
 }

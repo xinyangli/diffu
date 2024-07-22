@@ -53,10 +53,11 @@ class Target {
 public:
   DiffTargetApi ops;
   TargetMeta meta;
-  arch_info_t arch;
-  size_t argsize;
   std::vector<uint8_t> args; // used as a buffer to store target specific values
 
+  bool *do_difftest;
+  arch_info_t *isa_arch_info;
+  size_t *dbg_state_size;
   gdb_action_t last_res;
 
   Target(){};

@@ -10,6 +10,8 @@ struct Config {
   std::vector<std::string> refs_prefix;
   std::filesystem::path dut;
   std::string dut_prefix = "";
+  std::string gdbstub_addr = "/tmp/gdbstub-diffu.sock";
+  bool use_debugger = false;
 
   int cli_parse(int argc, char **argv);
 };

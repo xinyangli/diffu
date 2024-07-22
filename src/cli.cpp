@@ -24,8 +24,12 @@ int Config::cli_parse(int argc, char **argv) {
   app.add_option("--dut-prefix", dut_prefix,
                  "Optional prefix for design under test");
 
+  app.add_option("--listen", gdbstub_addr, "Gdb remote listen address");
+
+  app.add_flag("-g", use_debugger, "Launch gdb remote stub");
+
   app.set_config("-c,--config")
-      ->transform(CLI::FileOnDefaultPath("./difftest.toml"));
+      ->transform(CLI::FileOnDefaultPath("difftest.toml"));
 
   // Default value for refs_prefix
   app.callback([&]() {
