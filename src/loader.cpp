@@ -9,7 +9,7 @@ Target::Target(const std::string &name, const std::string &func_prefix,
 
   meta = {.name = name,
           .libpath = path,
-          .dlhandle = dlopen(path.c_str(), RTLD_LAZY)};
+          .dlhandle = dlopen(path.c_str(), RTLD_NOW)};
 
   if (!meta.dlhandle) {
     throw std::runtime_error(dlerror());
@@ -17,9 +17,9 @@ Target::Target(const std::string &name, const std::string &func_prefix,
 
 #define LOAD_SYMBOL(ops, handle, prefix, name)                                 \
   do {                                                                         \
-    ops.name = reinterpret_cast<decltype(DiffTargetApi::name)>(                \
-        dlsym(handle, (prefix + #name).c_str()));                              \
-    if (!ops.name)                                                             \
+    (ops).name = reinterpret_cast<decltype((ops).name)>(                       \
+        dlsym((handle), ((prefix) + #name).c_str()));                          \
+    if (!((ops).name))                                                         \
       goto load_error;                                                         \
   } while (0);
 
@@ -34,22 +34,14 @@ Target::Target(const std::string &name, const std::string &func_prefix,
   LOAD_SYMBOL(ops, meta.dlhandle, func_prefix, on_interrupt);
   LOAD_SYMBOL(ops, meta.dlhandle, func_prefix, init);
 
+  LOAD_SYMBOL(*this, meta.dlhandle, func_prefix, do_difftest);
+  *do_difftest = true;
+
+  LOAD_SYMBOL(*this, meta.dlhandle, func_prefix, dbg_state_size);
+  args.resize(*dbg_state_size);
+  LOAD_SYMBOL(*this, meta.dlhandle, func_prefix, isa_arch_info);
 #undef LOAD_SYMBOL
 
-  size_t *argsize_sym;
-  argsize_sym = reinterpret_cast<size_t *>(dlsym(meta.dlhandle, "argsize"));
-  if (!argsize_sym)
-    goto load_error;
-
-  argsize = *argsize_sym;
-  args = std::vector<uint8_t>(argsize);
-
-  arch_info_t *arch_sym;
-  arch_sym =
-      reinterpret_cast<arch_info_t *>(dlsym(meta.dlhandle, "isa_arch_info"));
-  if (!arch_sym)
-    goto load_error;
-  arch = *arch_sym;
   return;
 
 load_error:
