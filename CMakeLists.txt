@@ -6,5 +6,7 @@ set(CMAKE_C_STANDARD 17)
 
 include(GNUInstallDirs)
 
+find_package(spdlog REQUIRED)
+
 include_directories(include)
 add_subdirectory(src)

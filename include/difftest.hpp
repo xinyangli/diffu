@@ -2,13 +2,12 @@
 #define _DIFFTEST_DIFFTEST_H_
 #include "api.hpp"
 #include <filesystem>
-#include <stdexcept>
+#include <spdlog/spdlog.h>
 #include <vector>
 extern "C" {
 #include <gdbstub.h>
 }
 
-#include <iostream>
 class Difftest {
 private:
   Target dut;
@@ -55,17 +54,22 @@ public:
   arch_info_t get_arch() const { return *dut.isa_arch_info; }
 
   static bool check(Target &dut, Target &ref) {
+    size_t pcref, pcdut;
+    bool passed = true;
+    dut.ops.read_reg(dut.args.data(), 32, &pcdut);
+    ref.ops.read_reg(ref.args.data(), 32, &pcref);
     for (int r = 0; r < dut.isa_arch_info->reg_num; r++) {
       size_t regdut = 0, regref = 0;
       dut.ops.read_reg(dut.args.data(), r, &regdut);
       ref.ops.read_reg(ref.args.data(), r, &regref);
       if (regdut != regref) {
-        std::cout << "reg: " << r << " dut: " << regdut << " ref: " << regref
-                  << std::endl;
-        throw std::runtime_error("Difftest failed");
+        spdlog::error("Reg {} different: \n\tPC:\t(ref) {:x}\t(dut) {:x}\n\t"
+                      "value:\t(ref) {:x}\t(dut) {:x}",
+                      r, pcref, pcdut, regref, regdut);
+        passed = false;
       }
     }
-    return true;
+    return passed;
   };
 
   class Iterator {

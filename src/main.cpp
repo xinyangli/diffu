@@ -1,10 +1,12 @@
 #include "api.hpp"
 #include "config.hpp"
 #include "difftest.hpp"
+#include <spdlog/cfg/env.h>
 
 int gdbstub_loop(Difftest *, std::string);
 
 int main(int argc, char **argv) {
+  spdlog::cfg::load_env_levels();
   Config config;
   int ret = 0;
   ret = config.cli_parse(argc, argv);

@@ -1,0 +1,13 @@
+# ref = "/home/xin/repo/spike-diff/build/lib/libspike-diff.so"
+# ref-prefix = "spike_"
+# dut = "/home/xin/repo/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so"
+# dut-prefix = "nemu_"
+
+ref = /home/xin/repo/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so
+ref-prefix = nemu_
+dut = "/home/xin/repo/spike-diff/build/lib/libspike-diff.so"
+dut-prefix = "spike_"
+listen = "/tmp/gdbstub-diffu.sock"
+# listen = "127.0.0.1:1234"
+memory = "/nix/store/37986mdgsqm5m8w74k0f5llzqhxgsbnv-am-kernel-riscv32-none-elf-2024-07-10/share/am-kernels/string.bin"
+# g = true

@@ -38,14 +38,16 @@
             };
           };
         };
-        devShells.default = with pkgs; mkShell {
+        devShells.default = with pkgs; (mkShell.override { stdenv = ccacheStdenv; }) {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
           buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
           packages = [
             clang-tools
             cmake
+            ninja
             gdb
             cli11
+            spdlog
             mini-gdbstub
           ];
         };

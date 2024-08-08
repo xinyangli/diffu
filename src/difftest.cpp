@@ -2,9 +2,8 @@
 #include <difftest.hpp>
 #include <fstream>
 #include <gdbstub.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
-
-#include <cstdio>
 
 Difftest::Difftest(Target &&dut, std::vector<Target> &&refs) {
   this->dut = std::move(dut);
@@ -36,6 +35,7 @@ void Difftest::setup(const std::filesystem::path &memory_file) {
   for (auto it = this->begin(); it != this->end(); ++it) {
     auto &target = *it;
     target.ops.init(target.args.data());
+    target.ops.write_reg(target.args.data(), 32, 0x80000000UL);
     if (target.ops.write_mem(target.args.data(), 0x80000000UL, membuf.size(),
                              membuf.data()) != 0)
       throw std::runtime_error("write_mem failed");
@@ -43,10 +43,12 @@ void Difftest::setup(const std::filesystem::path &memory_file) {
 }
 
 bool Difftest::check_all() {
+  bool passed = true;
   for (auto &ref : refs) {
-    check(dut, ref);
+    if (check(dut, ref) == false)
+      passed = false;
   }
-  return true;
+  return passed;
 }
 
 Difftest::ExecRet Difftest::exec(size_t n, gdb_action_t *ret) {
@@ -58,9 +60,12 @@ Difftest::ExecRet Difftest::exec(size_t n, gdb_action_t *ret) {
       auto &target = *it;
       *target.do_difftest = true;
       target.ops.stepi(target.args.data(), &target.last_res);
+      spdlog::trace("{} stepped once", target.meta.name);
       if (target.is_on_breakpoint()) {
         exec_ret.at_breakpoint = true;
         pbreak = &target;
+        spdlog::trace("{} on breakpoint", target.meta.name);
+        continue;
       }
       exec_ret.do_difftest = *target.do_difftest && exec_ret.do_difftest;
     }
@@ -88,7 +93,10 @@ gdb_action_t Difftest::cont() {
   while (!is_halt()) {
     exec_ret = exec(1, &ret);
     if (exec_ret.do_difftest)
-      check_all();
+      if (check_all() == false) {
+        ret.reason = gdb_action_t::ACT_BREAKPOINT;
+        break;
+      }
     if (exec_ret.at_breakpoint)
       break;
   };
@@ -122,6 +130,7 @@ int Difftest::sync_regs_to_ref(void) {
         return ret;
     }
   }
+  spdlog::trace("Applied registers value from dut to ref");
   return ret;
 }
 

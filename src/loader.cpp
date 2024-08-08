@@ -1,7 +1,7 @@
 #include "api.hpp"
-#include <cstdint>
 #include <dlfcn.h>
 #include <gdbstub.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 Target::Target(const std::string &name, const std::string &func_prefix,
@@ -11,16 +11,19 @@ Target::Target(const std::string &name, const std::string &func_prefix,
           .libpath = path,
           .dlhandle = dlopen(path.c_str(), RTLD_NOW)};
 
+  spdlog::info("Library handle: {}", meta.dlhandle);
   if (!meta.dlhandle) {
     throw std::runtime_error(dlerror());
   }
 
 #define LOAD_SYMBOL(ops, handle, prefix, name)                                 \
   do {                                                                         \
+    std::string symbol_name = func_prefix + #name;                             \
     (ops).name = reinterpret_cast<decltype((ops).name)>(                       \
-        dlsym((handle), ((prefix) + #name).c_str()));                          \
+        dlsym((handle), symbol_name.c_str()));                                 \
     if (!((ops).name))                                                         \
       goto load_error;                                                         \
+    spdlog::debug("Found {} at {}", symbol_name, ((void *)((ops).name)));      \
   } while (0);
 
   LOAD_SYMBOL(ops, meta.dlhandle, func_prefix, cont);

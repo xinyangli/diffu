@@ -2,10 +2,10 @@
 #include <CLI/Error.hpp>
 #include <cstring>
 #include <difftest.hpp>
+#include <spdlog/spdlog.h>
 #include <sstream>
 extern "C" {
 #include <gdbstub.h>
-}
 
 static void difftest_cont(void *args, gdb_action_t *res) {
   Difftest *diff = (Difftest *)args;
@@ -65,6 +65,7 @@ std::vector<std::string> split_into_args(const std::string &command) {
 
 static char *gdbstub_monitor(void *args, const char *s) {
   Difftest *diff = (Difftest *)args;
+  spdlog::trace("monitor");
   CLI::App parser;
   std::string ret = "";
 
@@ -110,6 +111,7 @@ static char *gdbstub_monitor(void *args, const char *s) {
     return strdup(ret_stream.str().c_str());
   }
 }
+}
 
 int gdbstub_loop(Difftest *diff, std::string socket_addr) {
   target_ops gdbstub_ops = {.cont = difftest_cont,
@@ -124,13 +126,15 @@ int gdbstub_loop(Difftest *diff, std::string socket_addr) {
                             .monitor = gdbstub_monitor};
   gdbstub_t gdbstub_priv;
 
-  std::cout << "Waiting for gdb connection at " << socket_addr << std::endl;
+  arch_info_t arch = diff->get_arch();
 
-  if (!gdbstub_init(&gdbstub_priv, &gdbstub_ops, diff->get_arch(),
+  if (!gdbstub_init(&gdbstub_priv, &gdbstub_ops, arch, nullptr,
                     socket_addr.c_str())) {
-    std::cerr << "Failed to init socket at: " << socket_addr << std::endl;
+    spdlog::error("Failed to init socket at: {}", socket_addr);
     return false;
   }
+
+  spdlog::info("Connected to gdb at {}", socket_addr);
 
   bool success = gdbstub_run(&gdbstub_priv, diff);
   gdbstub_close(&gdbstub_priv);
