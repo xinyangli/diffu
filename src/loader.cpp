@@ -11,7 +11,9 @@ Target::Target(const std::string &name, const std::string &func_prefix,
           .libpath = path,
           .dlhandle = dlopen(path.c_str(), RTLD_NOW)};
 
-  spdlog::info("Library handle: {}", meta.dlhandle);
+  spdlog::info("Found dlopen API handle for {} at {}", meta.name,
+               meta.dlhandle);
+
   if (!meta.dlhandle) {
     throw std::runtime_error(dlerror());
   }

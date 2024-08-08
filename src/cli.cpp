@@ -6,9 +6,16 @@
 
 int Config::cli_parse(int argc, char **argv) {
   CLI::App app;
-  app.add_option("-m,--memory", memory_file, "Content of memory")
-      ->required()
-      ->check(CLI::ExistingFile);
+  app.add_option(
+         "--images-path", images_path,
+         "Directory containing image files. Search image files in this path.")
+      ->envname("DIFFU_IMAGES_PATH")
+      ->check(CLI::ExistingPath);
+
+  app.add_option("-m,--memory", memory_file,
+                 "Image file used to fill up the memory. Relative path to "
+                 "--images-path")
+      ->required();
 
   app.add_option("--ref", refs, "Reference dynamic library")
       ->required()

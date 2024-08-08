@@ -5,6 +5,7 @@
 #include <vector>
 
 struct Config {
+  std::filesystem::path images_path = "./";
   std::filesystem::path memory_file;
   std::vector<std::filesystem::path> refs;
   std::vector<std::string> refs_prefix;

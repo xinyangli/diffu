@@ -1,7 +1,9 @@
 #include "api.hpp"
 #include "config.hpp"
 #include "difftest.hpp"
+#include <filesystem>
 #include <spdlog/cfg/env.h>
+#include <spdlog/spdlog.h>
 
 int gdbstub_loop(Difftest *, std::string);
 
@@ -26,7 +28,12 @@ int main(int argc, char **argv) {
 
   Difftest difftest{std::move(*dut), std::move(refs)};
 
-  difftest.setup(config.memory_file);
+  std::filesystem::path image_file = config.images_path / config.memory_file;
+  if (!std::filesystem::exists(image_file)) {
+    spdlog::error("Cannot find {} in {}.", config.memory_file.c_str(),
+                  config.images_path.c_str());
+  }
+  difftest.setup(image_file);
 
   if (config.use_debugger) {
     gdbstub_loop(&difftest, config.gdbstub_addr);

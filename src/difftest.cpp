@@ -20,6 +20,7 @@ Difftest::Difftest(Target &&dut, std::vector<Target> &&refs) {
 void Difftest::setup(const std::filesystem::path &memory_file) {
   std::ifstream is = std::ifstream(memory_file, std::ios::binary);
 
+  spdlog::debug("Reading image file: {}", memory_file.c_str());
   // Seek to the end to determine the file size
   is.seekg(0, std::ios::end);
   std::streampos memsize = is.tellg();
