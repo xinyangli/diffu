@@ -1,3 +1,4 @@
+#include "api.hpp"
 #include <CLI/App.hpp>
 #include <CLI/Error.hpp>
 #include <cstring>
@@ -69,12 +70,19 @@ static char *gdbstub_monitor(void *args, const char *s) {
   CLI::App parser;
   std::string ret = "";
 
+  auto sync = parser.add_subcommand("sync", "Sync states between targets")
+                  ->callback([&]() { diff->sync_regs_to_ref(); });
+  parser.add_subcommand("list", "List targets.")->callback([&]() {
+    ret = diff->list_targets();
+  });
   parser.add_subcommand("help", "Print help message")->callback([&]() {
     ret = parser.help();
   });
-  auto sync = parser.add_subcommand("sync", "Sync states between targets")
-                  ->callback([&]() { diff->sync_regs_to_ref(); });
 
+  int target_index = -1;
+  parser.add_subcommand("switch", "Switch to another target")
+      ->callback([&]() { ret = diff->switch_target(target_index); })
+      ->add_option("target_index", target_index, "Index of the target");
   std::string cmdstr;
   int slen = strlen(s);
   int ch;

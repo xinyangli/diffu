@@ -46,6 +46,8 @@ public:
 
   bool check_all();
   int sync_regs_to_ref(void);
+  std::string list_targets(void);
+  std::string switch_target(int index);
 
   inline void halt() {
     __atomic_store_n(&halt_status, true, __ATOMIC_RELAXED);

@@ -1,9 +1,12 @@
 #include "api.hpp"
+#include <cerrno>
 #include <difftest.hpp>
 #include <fstream>
 #include <gdbstub.h>
 #include <spdlog/spdlog.h>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 Difftest::Difftest(Target &&dut, std::vector<Target> &&refs) {
   this->dut = std::move(dut);
@@ -82,8 +85,12 @@ Difftest::ExecRet Difftest::exec(size_t n, gdb_action_t *ret) {
 
 gdb_action_t Difftest::stepi() {
   gdb_action_t ret = {.reason = gdb_action_t::ACT_NONE};
-  exec(1, &ret);
-  check_all();
+  ExecRet exec_result = exec(1, &ret);
+  if (exec_result.do_difftest) {
+    check_all();
+  } else {
+    sync_regs_to_ref();
+  }
   return ret;
 }
 
@@ -93,11 +100,14 @@ gdb_action_t Difftest::cont() {
   start_run();
   while (!is_halt()) {
     exec_ret = exec(1, &ret);
-    if (exec_ret.do_difftest)
-      if (check_all() == false) {
-        ret.reason = gdb_action_t::ACT_BREAKPOINT;
-        break;
-      }
+    if (exec_ret.do_difftest) {
+      check_all();
+    } else {
+      size_t pc = 0;
+      read_reg(32, &pc);
+      spdlog::debug("Difftest skipped at {}", (void *)pc);
+      sync_regs_to_ref();
+    }
     if (exec_ret.at_breakpoint)
       break;
   };
@@ -133,6 +143,32 @@ int Difftest::sync_regs_to_ref(void) {
   }
   spdlog::trace("Applied registers value from dut to ref");
   return ret;
+}
+
+std::string Difftest::list_targets(void) {
+  std::ostringstream os;
+  int i = 0;
+  for (auto it = this->begin(); it != this->end(); ++it, ++i) {
+    auto &target = *it;
+    os << i << ": " << target.meta.name << std::endl;
+  }
+  os << "current: " << current_target->meta.name << std::endl;
+  return os.str();
+}
+
+std::string Difftest::switch_target(int index) {
+  std::ostringstream os;
+  int i = 0;
+  for (auto it = this->begin(); it != this->end(); ++it, ++i) {
+    auto &target = *it;
+    if (i == index) {
+      current_target = &target;
+      os << "Switched to " << current_target->meta.name << std::endl;
+      return os.str();
+    }
+  }
+  os << "Invalid target target index: " << index << std::endl;
+  return os.str();
 }
 
 int Difftest::read_mem(size_t addr, size_t len, void *val) {
