@@ -1,4 +1,3 @@
-#include "api.hpp"
 #include <CLI/App.hpp>
 #include <CLI/Error.hpp>
 #include <cstring>
@@ -7,7 +6,19 @@
 #include <sstream>
 extern "C" {
 #include <gdbstub.h>
+}
 
+static std::vector<std::string> split_into_args(const std::string &command) {
+  std::istringstream iss(command);
+  std::vector<std::string> args;
+  std::string token;
+  while (iss >> token) {
+    args.push_back(token);
+  }
+  return args;
+}
+
+extern "C" {
 static void difftest_cont(void *args, gdb_action_t *res) {
   Difftest *diff = (Difftest *)args;
   *res = diff->cont();
@@ -52,16 +63,6 @@ static void difftest_on_interrupt(void *args) {
   Difftest *diff = (Difftest *)args;
   puts("interrupt");
   diff->halt();
-}
-
-std::vector<std::string> split_into_args(const std::string &command) {
-  std::istringstream iss(command);
-  std::vector<std::string> args;
-  std::string token;
-  while (iss >> token) {
-    args.push_back(token);
-  }
-  return args;
 }
 
 static char *gdbstub_monitor(void *args, const char *s) {
