@@ -3,6 +3,7 @@
 , cmake
 , mini-gdbstub
 , cli11
+, spdlog
 }: stdenv.mkDerivation {
   pname = "diffu";
   version = "0.0.0";
@@ -13,5 +14,6 @@
     cmake
     mini-gdbstub
     cli11
+    spdlog
   ];
 }
